@@ -1,0 +1,13 @@
+# Compiled binaries
+sailing-sim
+*.o
+*.out
+
+# Build directories
+build/
+bin/
+
+# IDE stuff
+.vscode/
+*.swp
+*~
