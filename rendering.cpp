@@ -18,7 +18,7 @@ void DrawBoat3D(const Boat& boat, const Model& boatModel, const Model& sailModel
     
     Matrix sailTransform = MatrixIdentity();
     sailTransform = MatrixMultiply(MatrixTranslate(boat.x, 0.0f, -boat.y), sailTransform);
-    sailTransform = MatrixMultiply(MatrixRotateY(-boat.heading + M_PI), sailTransform);  // Match boat rotation
+    sailTransform = MatrixMultiply(MatrixRotateY(-boat.heading + M_PI), sailTransform);
     sailTransform = MatrixMultiply(MatrixRotateZ(-boat.heel), sailTransform);  // Match boat heel (negative)
     sailTransform = MatrixMultiply(MatrixTranslate(0, 2.0f, 0), sailTransform);
     sailTransform = MatrixMultiply(MatrixRotateY(-boat.sailAngle), sailTransform);
