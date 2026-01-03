@@ -3,10 +3,10 @@
 #include <cstdio>
 
 const float WATER_DENSITY = 1000.0f;
-const float DRAG_COEFFICIENT = 0.01f;
+const float DRAG_COEFFICIENT = 0.007f;
 const float HULL_AREA = 2.0f;
 const float SAIL_AREA = 8.0f;
-const float SAIL_EFFICIENCY = 3.0f;
+const float SAIL_EFFICIENCY = 2.0f;
 const float BOAT_MASS = 50.0f;
 const float RUDDER_EFFECTIVENESS = 0.2f;
 
