@@ -8,6 +8,7 @@
 #include "wake.h"
 #include "wavechevrons.h"
 #include <cmath>
+#include <cstdio>
 
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
@@ -17,6 +18,13 @@ int main() {
     SetTargetFPS(60);
     
     Model boatModel = LoadModel("sailboat.glb");
+
+    Shader lightShader = LoadShader("lighting.vs", "lighting.fs");
+    boatModel.materials[0].shader = lightShader;
+
+    Mesh sailMesh = GenMeshCube(0.2f, 3.0f, 4.0f);
+    Model sailModel = LoadModelFromMesh(sailMesh);
+    sailModel.materials[0].shader = lightShader;
     
     Boat boat;
     InitBoat(boat);
@@ -53,8 +61,8 @@ int main() {
         float dt = GetFrameTime();
         
         // Wind oscillation
-        windTimer += dt;
-        wind.direction = sinf(windTimer / 120.0f * 2 * M_PI) * M_PI/4;
+        //windTimer += dt;
+        //wind.direction = sinf(windTimer / 120.0f * 2 * M_PI) * M_PI/4;
         
         // Update
         HandleInput(boat, dt);
@@ -80,12 +88,13 @@ int main() {
         
         // Render
         BeginDrawing();
-        ClearBackground(SKYBLUE);
+        ClearBackground((Color){135, 206, 235, 255});
         
         BeginMode3D(camera);
+            Vector3 lightDir = {-0.5f, -1.0f, -0.3f};
             DrawWater(boat);
             DrawWindParticles3D(particles);
-            DrawBoat3D(boat, boatModel, apparentWind);
+            DrawBoat3D(boat, boatModel, sailModel);
             DrawWaypoint3D(waypoint, boat);
             DrawWake3D(wake, wakeCount);
             DrawWaveChevrons3D(chevrons);

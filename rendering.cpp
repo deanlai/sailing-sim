@@ -5,9 +5,7 @@
 #include <rlgl.h>
 #include <cmath>
 
-void DrawBoat3D(const Boat& boat, const Model& boatModel, const Vector2D& apparentWind) {
-    float sailAngle = GetSailAngle(apparentWind, boat.heading, boat.sheet);
-    
+void DrawBoat3D(const Boat& boat, const Model& boatModel, const Model& sailModel) {
     Matrix boatTransform = MatrixIdentity();
     boatTransform = MatrixMultiply(MatrixTranslate(boat.x, 0.0f, -boat.y), boatTransform);
     boatTransform = MatrixMultiply(MatrixRotateY(-boat.heading + M_PI), boatTransform);
@@ -16,7 +14,6 @@ void DrawBoat3D(const Boat& boat, const Model& boatModel, const Vector2D& appare
     rlPushMatrix();
     rlMultMatrixf(MatrixToFloat(boatTransform));
     DrawModel(boatModel, (Vector3){0, 0, 0}, 1.0f, WHITE);
-    DrawModelWires(boatModel, (Vector3){0, 0, 0}, 1.0f, BLACK);
     rlPopMatrix();
     
     Matrix sailTransform = MatrixIdentity();
@@ -24,12 +21,11 @@ void DrawBoat3D(const Boat& boat, const Model& boatModel, const Vector2D& appare
     sailTransform = MatrixMultiply(MatrixRotateY(-boat.heading + M_PI), sailTransform);  // Match boat rotation
     sailTransform = MatrixMultiply(MatrixRotateZ(-boat.heel), sailTransform);  // Match boat heel (negative)
     sailTransform = MatrixMultiply(MatrixTranslate(0, 2.0f, 0), sailTransform);
-    sailTransform = MatrixMultiply(MatrixRotateY(-sailAngle), sailTransform);
+    sailTransform = MatrixMultiply(MatrixRotateY(-boat.sailAngle), sailTransform);
     
     rlPushMatrix();
     rlMultMatrixf(MatrixToFloat(sailTransform));
-    DrawCube((Vector3){0, 0, -2.0f}, 0.2f, 3.0f, 4.0f, YELLOW);  // Positive Z = behind mast
-    DrawCubeWires((Vector3){0, 0, -2.0f}, 0.2f, 3.0f, 4.0f, ORANGE);
+    DrawModel(sailModel, (Vector3){0, 0, -2.0f}, 1.0f, YELLOW);
     rlPopMatrix();
 }
 
@@ -61,13 +57,17 @@ void DrawWater(const Boat& boat) {
 
 void DrawWake3D(const WakePoint wake[], int wakeCount) {
     for (int i = 0; i < wakeCount - 1; i++) {
-        float alpha = 1.0f - (float)i / wakeCount;  // Fade with distance
+        float t = (float)i / wakeCount;  // 0 near boat, 1 far away
+        float alpha = 1.0f - t;
+        float width = 1.0f + (1.0f - t) * 6.0f;  // 4px near boat, 1px far away
+        
         Vector3 p1 = {wake[i].x, 0.0f, -wake[i].y};
         Vector3 p2 = {wake[i+1].x, 0.0f, -wake[i+1].y};
-        rlSetLineWidth(1.0f + alpha * 3.0f);  // 1-4 pixels wide
+        
+        rlSetLineWidth(width);
         DrawLine3D(p1, p2, ColorAlpha(WHITE, alpha * 0.6f));
-        rlSetLineWidth(1.0f);
     }
+    rlSetLineWidth(1.0f);  // Reset
 }
 
 void DrawWaveChevrons3D(const WaveChevron chevrons[]) {

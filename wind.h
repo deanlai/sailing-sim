@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-const int MAX_PARTICLES = 200;
+const int MAX_PARTICLES = 400;
 
 void UpdateWindParticles(WindParticle particles[], const Boat& boat, const Wind& wind, float dt);
 

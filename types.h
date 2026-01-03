@@ -27,6 +27,8 @@ struct Boat {
     float sheet;
     float rudder;
     float length;
+    float sailAngle;         // ADD: actual current sail angle
+    float sailAngularVel;    // ADD: how fast sail is rotating
 };
 
 struct Wind {
@@ -39,7 +41,7 @@ struct Waypoint {
     bool active;
 };
 
-const int TRAIL_LENGTH = 12;
+const int TRAIL_LENGTH = 5;
 
 struct WindParticle {
     float x, y;
@@ -54,7 +56,7 @@ struct WakePoint {
     float x, y;
 };
 
-const int MAX_WAVE_CHEVRONS = 30;
+const int MAX_WAVE_CHEVRONS = 100;
 
 struct WaveChevron {
     float x, z;           // Position in world

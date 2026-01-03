@@ -1,5 +1,6 @@
 #include "physics.h"
 #include <cmath>
+#include <cstdio>
 
 const float WATER_DENSITY = 1000.0f;
 const float DRAG_COEFFICIENT = 0.01f;
@@ -7,7 +8,7 @@ const float HULL_AREA = 2.0f;
 const float SAIL_AREA = 8.0f;
 const float SAIL_EFFICIENCY = 3.0f;
 const float BOAT_MASS = 50.0f;
-const float RUDDER_EFFECTIVENESS = 0.5f;
+const float RUDDER_EFFECTIVENESS = 0.2f;
 
 float NormalizeAngle(float angle) {
     while (angle > M_PI) angle -= 2*M_PI;
@@ -74,21 +75,33 @@ Vector2D CalculateDrag(float vx, float vy) {
 float CalculateHeelAngle(const Vector2D& apparentWind, float boatHeading, float sailAngle) {
     float apparentWindSpeed = apparentWind.magnitude();
     float apparentWindAngle = atan2f(apparentWind.x, apparentWind.y);
-    
-    float sailOrientation = boatHeading + sailAngle;
-    float windToSailAngle = NormalizeAngle(apparentWindAngle - sailOrientation);
-    float efficiency = sinf(fabs(windToSailAngle));
-    
-    float windForce = 0.5f * SAIL_EFFICIENCY * SAIL_AREA * efficiency * apparentWindSpeed * apparentWindSpeed;
-    float sidewaysForce = windForce * sinf(sailAngle);
+
+    // 1. Wind force on sail (world space)
+    float sailOrientationWorld = boatHeading + sailAngle;
+    float windToSailAngle = NormalizeAngle(apparentWindAngle - sailOrientationWorld);
+    float windEfficiency = sinf(fabs(windToSailAngle));  // Max at 90°
+
+    float windForce = 0.5f * SAIL_EFFICIENCY * SAIL_AREA * windEfficiency * apparentWindSpeed * apparentWindSpeed;
     
     const float SAIL_CENTER_HEIGHT = 3.0f;
     const float RIGHTING_CONSTANT = 10000.0f;
     
-    float heelingMoment = fabs(sidewaysForce) * SAIL_CENTER_HEIGHT;
+    // Magnitude: how aligned with centerline
+    float deviationFromCenterline = NormalizeAngle(sailAngle - M_PI);
+    float heelMagnitude = windForce * fabs(cosf(deviationFromCenterline)) * SAIL_CENTER_HEIGHT;
+
+    // Direction: which side of sail is wind hitting
+    float heelDirection = windToSailAngle > 0 ? 1.0f : -1.0f;
+
+    float heelingMoment = heelMagnitude * heelDirection;
     float heelAngle = heelingMoment / RIGHTING_CONSTANT;
-    
-    return fminf(heelAngle, M_PI/4) * (sailAngle > 0 ? 1.0f : -1.0f);
+
+    static float prevDeviation = 0.0f;
+    float signSource = fabs(deviationFromCenterline) < 0.01f ? prevDeviation : deviationFromCenterline;
+    prevDeviation = deviationFromCenterline;
+
+    float clampedMagnitude = fminf(fabs(heelAngle), M_PI/4);
+    return heelAngle > 0 ? clampedMagnitude : -clampedMagnitude;
 }
 
 float CalculateVMG(const Boat& boat, const Waypoint& waypoint) {
